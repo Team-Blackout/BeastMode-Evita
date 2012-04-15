@@ -16,7 +16,6 @@
 
 #ifndef _LINUX_SYNAPTICS_I2C_RMI_H
 #define _LINUX_SYNAPTICS_I2C_RMI_H
-
 #ifdef CONFIG_TOUCHSCREEN_SYNAPTICS_SWEEP2WAKE
 #include <linux/input.h>
 #endif
@@ -160,7 +159,6 @@ enum {
 	INTR_SOURCE,
 	FUNCTION
 };
-
 #ifdef CONFIG_TOUCHSCREEN_SYNAPTICS_SWEEP2WAKE
 /* Sweep2Wake */
 extern void sweep2wake_setdev(struct input_dev * input_device);

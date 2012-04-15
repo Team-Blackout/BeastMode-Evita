@@ -25,9 +25,19 @@
 #include <linux/gpio_keys.h>
 #include <linux/workqueue.h>
 #include <linux/gpio.h>
+<<<<<<< HEAD
 #ifdef CONFIG_TOUCHSCREEN_SYNAPTICS_SWEEP2WAKE
 #include <linux/synaptics_i2c_rmi.h>
 #endif
+=======
+<<<<<<< HEAD
+=======
+#include <linux/wakelock.h>
+#ifdef CONFIG_TOUCHSCREEN_SYNAPTICS_SWEEP2WAKE
+#include <linux/synaptics_i2c_rmi.h>
+#endif
+>>>>>>> d8d5c0b... sweep2wake: add initial sweep2wake support
+>>>>>>> 1de97f2... sweep2wake: add initial sweep2wake support
 
 struct gpio_button_data {
 	struct gpio_keys_button *button;
