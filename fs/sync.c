@@ -18,8 +18,6 @@
 #include <linux/backing-dev.h>
 #include "internal.h"
 
-#include <trace/events/mmcio.h>
-
 #define VALID_FLAGS (SYNC_FILE_RANGE_WAIT_BEFORE|SYNC_FILE_RANGE_WRITE| \
 			SYNC_FILE_RANGE_WAIT_AFTER)
 
@@ -100,13 +98,11 @@ static void sync_filesystems(int wait)
  */
 SYSCALL_DEFINE0(sync)
 {
-	trace_sys_sync(0);
 	wakeup_flusher_threads(0);
 	sync_filesystems(0);
 	sync_filesystems(1);
 	if (unlikely(laptop_mode))
 		laptop_sync_completion();
-	trace_sys_sync_done(0);
 	return 0;
 }
 
@@ -183,13 +179,11 @@ int vfs_fsync_range(struct file *file, loff_t start, loff_t end, int datasync)
 	 * We need to protect against concurrent writers, which could cause
 	 * livelocks in fsync_buffers_list().
 	 */
-	trace_vfs_fsync(file);
 	mutex_lock(&mapping->host->i_mutex);
 	err = file->f_op->fsync(file, datasync);
 	if (!ret)
 		ret = err;
 	mutex_unlock(&mapping->host->i_mutex);
-	trace_vfs_fsync_done(file);
 
 out:
 	return ret;
@@ -210,7 +204,7 @@ int vfs_fsync(struct file *file, int datasync)
 }
 EXPORT_SYMBOL(vfs_fsync);
 
-static int do_fsync(unsigned int fd, int datasync)
+/*static int do_fsync(unsigned int fd, int datasync)
 {
 	struct file *file;
 	int ret = -EBADF;
@@ -221,16 +215,18 @@ static int do_fsync(unsigned int fd, int datasync)
 		fput(file);
 	}
 	return ret;
-}
+}*/
 
 SYSCALL_DEFINE1(fsync, unsigned int, fd)
 {
-	return do_fsync(fd, 0);
+	//return do_fsync(fd, 0);
+	return 0;
 }
 
 SYSCALL_DEFINE1(fdatasync, unsigned int, fd)
 {
-	return do_fsync(fd, 1);
+	//return do_fsync(fd, 1);
+	return 0;
 }
 
 /**
@@ -300,6 +296,7 @@ EXPORT_SYMBOL(generic_write_sync);
 SYSCALL_DEFINE(sync_file_range)(int fd, loff_t offset, loff_t nbytes,
 				unsigned int flags)
 {
+#ifdef ALLOWFSYNC
 	int ret;
 	struct file *file;
 	struct address_space *mapping;
@@ -379,6 +376,8 @@ out_put:
 	fput_light(file, fput_needed);
 out:
 	return ret;
+#endif
+return 0;
 }
 #ifdef CONFIG_HAVE_SYSCALL_WRAPPERS
 asmlinkage long SyS_sync_file_range(long fd, loff_t offset, loff_t nbytes,
@@ -395,7 +394,8 @@ SYSCALL_ALIAS(sys_sync_file_range, SyS_sync_file_range);
 SYSCALL_DEFINE(sync_file_range2)(int fd, unsigned int flags,
 				 loff_t offset, loff_t nbytes)
 {
-	return sys_sync_file_range(fd, offset, nbytes, flags);
+	//return sys_sync_file_range(fd, offset, nbytes, flags);
+	return 0;
 }
 #ifdef CONFIG_HAVE_SYSCALL_WRAPPERS
 asmlinkage long SyS_sync_file_range2(long fd, long flags,
