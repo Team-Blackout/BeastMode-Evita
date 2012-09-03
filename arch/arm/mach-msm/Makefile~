@@ -423,5 +423,5 @@ obj-$(CONFIG_PERFLOCK) += perflock.o
 obj-y += display/
 
 ifndef CONFIG_PERFLOCK
-obj-y += Zpower.o
+obj-y += ca1ne.o
 endif
