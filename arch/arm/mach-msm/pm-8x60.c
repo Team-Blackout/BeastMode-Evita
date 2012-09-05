@@ -1,4 +1,4 @@
-/* Copyright (c) 2010-2011, Code Aurora Forum. All rights reserved.
+/* Copyright (c) 2010-2012, Code Aurora Forum. All rights reserved.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 2 and
@@ -61,32 +61,31 @@
 #include "pm-boot.h"
 #include <mach/msm_xo.h>
 #include <linux/wakelock.h>
-#include <linux/cpufreq.h>
 
 #ifdef pr_err
 #undef pr_err
 #endif
 #define pr_err(fmt, args...) \
-	printk(KERN_ERR "[K][PM] " pr_fmt(fmt), ## args)
+	printk(KERN_ERR "[PM] " pr_fmt(fmt), ## args)
 
 #ifdef pr_warning
 #undef pr_warning
 #endif
 #define pr_warning(fmt, args...) \
-	printk(KERN_WARNING "[K][PM] " pr_fmt(fmt), ## args)
+	printk(KERN_WARNING "[PM] " pr_fmt(fmt), ## args)
 
 #ifdef pr_info
 #undef pr_info
 #endif
 #define pr_info(fmt, args...) \
-	printk(KERN_INFO "[K][PM] " pr_fmt(fmt), ## args)
+	printk(KERN_INFO "[PM] " pr_fmt(fmt), ## args)
 
 #if defined(DEBUG)
 #ifdef pr_debug
 #undef pr_debug
 #endif
 #define pr_debug(fmt, args...) \
-	printk(KERN_DEBUG "[K][PM] " pr_fmt(fmt), ## args)
+	printk(KERN_DEBUG "[PM] " pr_fmt(fmt), ## args)
 #endif
 
 /******************************************************************************
@@ -100,6 +99,7 @@ enum {
 	MSM_PM_DEBUG_SUSPEND_LIMITS = BIT(2),
 	MSM_PM_DEBUG_CLOCK = BIT(3),
 	MSM_PM_DEBUG_RESET_VECTOR = BIT(4),
+	MSM_PM_DEBUG_IDLE_CLK = BIT(5),
 	MSM_PM_DEBUG_IDLE = BIT(6),
 	MSM_PM_DEBUG_IDLE_LIMITS = BIT(7),
 	MSM_PM_DEBUG_HOTPLUG = BIT(8),
@@ -108,8 +108,6 @@ enum {
 	MSM_PM_DEBUG_IDLE_CLOCK = BIT(11),
 	MSM_PM_DEBUG_RPM_STAT = BIT(12),
 	MSM_PM_DEBUG_VREG = BIT(13),
-	MSM_PM_DEBUG_CPUFREQ_TOTAL = BIT(14),
-	MSM_PM_DEBUG_CPUFREQ_DIFF = BIT(15),
 };
 
 static int msm_pm_debug_mask = MSM_PM_DEBUG_SUSPEND | MSM_PM_DEBUG_SUSPEND_LIMITS
@@ -736,7 +734,7 @@ EXPORT_SYMBOL(msm_pm_network_info_init);
 void network_info_dump(void)
 {
 	if (network_info_addr)
-		printk("[K] network info: %d\n", *network_info_addr);
+		printk("network info: %d\n", *network_info_addr);
 }
 
 /******************************************************************************
@@ -805,12 +803,8 @@ static bool msm_pm_spm_power_collapse(
 #ifdef CONFIG_MSM_WATCHDOG
 		msm_watchdog_suspend();
 #endif
-		if (MSM_PM_DEBUG_CPUFREQ_TOTAL & msm_pm_debug_mask)
-			print_cpu_freq_stats(0);
-		if (MSM_PM_DEBUG_CPUFREQ_DIFF & msm_pm_debug_mask)
-			print_cpu_freq_stats(1);
 
-		printk(KERN_INFO "[K][R] suspend end\n");
+		printk(KERN_INFO "[R] suspend end\n");
 	}
 	collapsed = msm_pm_l2x0_power_collapse();
 
@@ -820,7 +814,7 @@ static bool msm_pm_spm_power_collapse(
 	msm_pm_boot_config_after_pc(cpu);
 
 	if (!from_idle && smp_processor_id() == 0) {
-		printk(KERN_INFO "[K][R] resume start\n");
+		printk(KERN_INFO "[R] resume start\n");
 
 #ifdef CONFIG_MSM_WATCHDOG
 		msm_watchdog_resume();
@@ -830,7 +824,6 @@ static bool msm_pm_spm_power_collapse(
 
 		if (suspend_console_deferred)
 			resume_console();
-
 	}
 
 	set_cpu_foot_print(cpu, 0xb);
@@ -1163,6 +1156,9 @@ int msm_pm_idle_enter(enum msm_pm_sleep_mode sleep_mode)
 		if (sleep_delay == 0) /* 0 would mean infinite time */
 			sleep_delay = 1;
 
+		if (MSM_PM_DEBUG_IDLE_CLK & msm_pm_debug_mask)
+			clock_debug_print_enabled();
+
 		ret = msm_rpmrs_enter_sleep(
 			sleep_delay, msm_pm_idle_rs_limits, true, notify_rpm);
 		if (!ret) {
@@ -1318,7 +1314,7 @@ static int msm_pm_enter(suspend_state_t state)
 		} else {
 			gpio_sleep_status_info = kmalloc(25000, GFP_ATOMIC);
 			if (!gpio_sleep_status_info) {
-				pr_err("kmalloc memory failed in %s\n",
+				pr_err("[PM] kmalloc memory failed in %s\n",
 					__func__);
 
 			}
@@ -1340,7 +1336,7 @@ static int msm_pm_enter(suspend_state_t state)
 		} else {
 			vreg_sleep_status_info = kmalloc(25000, GFP_ATOMIC);
 			if (!vreg_sleep_status_info) {
-				pr_err("kmalloc memory failed in %s\n",
+				pr_err("[PM] kmalloc memory failed in %s\n",
 					__func__);
 
 			}
@@ -1451,14 +1447,9 @@ static int msm_pm_enter(suspend_state_t state)
 		msm_watchdog_suspend();
 #endif
 
-		if (MSM_PM_DEBUG_CPUFREQ_TOTAL & msm_pm_debug_mask)
-			print_cpu_freq_stats(0);
-		if (MSM_PM_DEBUG_CPUFREQ_DIFF & msm_pm_debug_mask)
-			print_cpu_freq_stats(1);
-
-		printk(KERN_INFO "[K][R] suspend end\n");
+		printk(KERN_INFO "[R] suspend end\n");
 		msm_pm_swfi();
-		printk(KERN_INFO "[K][R] resume start\n");
+		printk(KERN_INFO "[R] resume start\n");
 
 #ifdef CONFIG_MSM_WATCHDOG
 		msm_watchdog_resume();
