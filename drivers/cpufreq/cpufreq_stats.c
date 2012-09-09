@@ -30,9 +30,6 @@ static struct freq_attr _attr_##_name = {\
 	.show = _show,\
 };
 
-
-static cputime64_t cpu1_time_in_state[32] = {0};
-static unsigned int cpu1_total_trans;
 struct cpufreq_stats {
 	unsigned int cpu;
 	unsigned int total_trans;
@@ -66,11 +63,6 @@ static int cpufreq_stats_update(unsigned int cpu)
 		stat->time_in_state[stat->last_index] =
 			cputime64_add(stat->time_in_state[stat->last_index],
 				      cputime_sub(cur_time, stat->last_time));
-       if (cpu == 1)
-		cpu1_time_in_state[stat->last_index] =
-			cputime64_add(cpu1_time_in_state[stat->last_index],
-			cputime_sub(cur_time, stat->last_time));
-
 	stat->last_time = cur_time;
 	spin_unlock(&cpufreq_stats_lock);
 	return 0;
@@ -84,12 +76,6 @@ static ssize_t show_total_trans(struct cpufreq_policy *policy, char *buf)
 	return sprintf(buf, "%d\n",
 			per_cpu(cpufreq_stats_table, stat->cpu)->total_trans);
 }
-
-static ssize_t show_cpu1_total_trans(struct cpufreq_policy *policy, char *buf)
-{
-       return sprintf(buf, "%d\n", cpu1_total_trans);
-}
-
 
 static ssize_t show_time_in_state(struct cpufreq_policy *policy, char *buf)
 {
@@ -106,25 +92,6 @@ static ssize_t show_time_in_state(struct cpufreq_policy *policy, char *buf)
 	}
 	return len;
 }
-
-static ssize_t show_cpu1_time_in_state(struct cpufreq_policy *policy, char *buf)
-{
-	ssize_t len = 0;
-	int i;
-	struct cpufreq_stats *stat = per_cpu(cpufreq_stats_table, 1);
-	if (stat)
-		cpufreq_stats_update(1);
-	else
-		stat = per_cpu(cpufreq_stats_table, 0);
-	if (!stat)
-		return 0;
-	for (i = 0; i < stat->state_num; i++) {
-		len += sprintf(buf + len, "%u %llu\n", stat->freq_table[i],
-			(unsigned long long)cputime64_to_clock_t(cpu1_time_in_state[i]));
-	}
-	return len;
-}
-
 
 #ifdef CONFIG_CPU_FREQ_STAT_DETAILS
 static ssize_t show_trans_table(struct cpufreq_policy *policy, char *buf)
@@ -174,15 +141,11 @@ CPUFREQ_STATDEVICE_ATTR(trans_table, 0444, show_trans_table);
 #endif
 
 CPUFREQ_STATDEVICE_ATTR(total_trans, 0444, show_total_trans);
-CPUFREQ_STATDEVICE_ATTR(cpu1_time_in_state, 0444, show_cpu1_time_in_state);
-CPUFREQ_STATDEVICE_ATTR(cpu1_total_trans, 0444, show_cpu1_total_trans);
 CPUFREQ_STATDEVICE_ATTR(time_in_state, 0444, show_time_in_state);
 
 static struct attribute *default_attrs[] = {
 	&_attr_total_trans.attr,
 	&_attr_time_in_state.attr,
-       &_attr_cpu1_time_in_state.attr,
-       &_attr_cpu1_total_trans.attr,
 #ifdef CONFIG_CPU_FREQ_STAT_DETAILS
 	&_attr_trans_table.attr,
 #endif
@@ -209,7 +172,6 @@ static void cpufreq_stats_free_table(unsigned int cpu)
 {
 	struct cpufreq_stats *stat = per_cpu(cpufreq_stats_table, cpu);
 	if (stat) {
-		cpufreq_stats_update(cpu);
 		kfree(stat->time_in_state);
 		kfree(stat);
 	}
@@ -336,13 +298,11 @@ static int cpufreq_stat_notifier_trans(struct notifier_block *nb,
 	old_index = stat->last_index;
 	new_index = freq_table_get_index(stat, freq->new);
 
-	/* We can't do stat->time_in_state[-1]= .. */
-	if (old_index == -1 || new_index == -1)
+	cpufreq_stats_update(freq->cpu);
+	if (old_index == new_index)
 		return 0;
 
-	cpufreq_stats_update(freq->cpu);
-
-	if (old_index == new_index)
+	if (old_index == -1 || new_index == -1)
 		return 0;
 
 	spin_lock(&cpufreq_stats_lock);
@@ -351,9 +311,6 @@ static int cpufreq_stat_notifier_trans(struct notifier_block *nb,
 	stat->trans_table[old_index * stat->max_state + new_index]++;
 #endif
 	stat->total_trans++;
-	if (freq->cpu == 1)
-		cpu1_total_trans++;
-
 	spin_unlock(&cpufreq_stats_lock);
 	return 0;
 }
@@ -391,11 +348,9 @@ static int __cpuinit cpufreq_stat_cpu_callback(struct notifier_block *nfb,
 		cpufreq_update_policy(cpu);
 		break;
 	case CPU_DOWN_PREPARE:
-	case CPU_DOWN_PREPARE_FROZEN:
 		cpufreq_stats_free_sysfs(cpu);
 		break;
-	case CPU_DEAD:
-	case CPU_DEAD_FROZEN:
+	case CPU_DOWN_PREPARE_FROZEN:
 		cpufreq_stats_free_table(cpu);
 		break;
 	case CPU_DOWN_FAILED:
@@ -407,7 +362,8 @@ static int __cpuinit cpufreq_stat_cpu_callback(struct notifier_block *nfb,
 }
 
 /* priority=1 so this will get called before cpufreq_remove_dev */
-static struct notifier_block cpufreq_stat_cpu_notifier __refdata = {
+static struct notifier_block cpufreq_stat_cpu_notifier __refdata =
+{
 	.notifier_call = cpufreq_stat_cpu_callback,
 	.priority = 1,
 };
@@ -456,7 +412,6 @@ static void __exit cpufreq_stats_exit(void)
 	unregister_hotcpu_notifier(&cpufreq_stat_cpu_notifier);
 	for_each_online_cpu(cpu) {
 		cpufreq_stats_free_table(cpu);
-		cpufreq_stats_free_sysfs(cpu);
 	}
 }
 
