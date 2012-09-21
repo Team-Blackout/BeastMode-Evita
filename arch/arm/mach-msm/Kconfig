@@ -2283,6 +2283,18 @@ config MSM_CACHE_DUMP
 	  This allows for analysis of the caches in case cache corruption is
 	  suspected.
 
+config MSM_GPU_MAX_OC
+	bool "GPU Max Overclock support"
+	default n
+	help
+	  To support the Max GPU OC.
+
+config MSM_GPU_MAX_STOCK
+	bool "Stock GPU Max OC support"
+	default n
+	help
+	  To support the stock GPU OC.
+
 config MSM_CPU_MAX_CLK_2DOT1GHZ
 	bool "CPU Max 2.1Ghz clk support"
 	default n
@@ -2332,4 +2344,9 @@ config ANDROID_RAM_CONSOLE_APPEND_PMIC_STATUS_BITS
 	  Append PMIC status bits to end of /proc/last_kmsg for
 	  checking the boot / reset reason in detail
 
+config CMDLINE_OPTIONS
+	bool "Enable cmdline options command parsing"
+	default n
+	help
+	  This enables the parsing of cmdline options.
 endif

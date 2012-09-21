@@ -3244,6 +3244,240 @@ static struct rcg_clk dsi2_esc_clk = {
 		.ctl_val = CC_BANKED(9, 6, n), \
 		.mnd_en_mask = (BIT(8) | BIT(5)) * !!(n), \
 	}
+#ifdef CONFIG_MSM_GPU_MAX_STOCK
+static struct clk_freq_tbl clk_tbl_gfx2d[] = {
+	F_GFX2D(        0, gnd,  0,  0),
+	F_GFX2D( 27000000, pxo,  0,  0),
+	F_GFX2D( 48000000, pll8, 1,  8),
+	F_GFX2D( 54857000, pll8, 1,  7),
+	F_GFX2D( 64000000, pll8, 1,  6),
+	F_GFX2D( 76800000, pll8, 1,  5),
+	F_GFX2D( 96000000, pll8, 1,  4),
+	F_GFX2D(128000000, pll8, 1,  3),
+	F_GFX2D(145455000, pll2, 2, 11),
+	F_GFX2D(160000000, pll2, 1,  5),
+	F_GFX2D(177778000, pll2, 2,  9),
+	F_GFX2D(200000000, pll2, 1,  4),
+	F_GFX2D(228571000, pll2, 2,  7),
+	F_END
+};
+
+static struct bank_masks bmnd_info_gfx2d0 = {
+	.bank_sel_mask =			BIT(11),
+	.bank0_mask = {
+			.md_reg =		GFX2D0_MD0_REG,
+			.ns_mask =		BM(23, 20) | BM(5, 3),
+			.rst_mask =		BIT(25),
+			.mnd_en_mask =		BIT(8),
+			.mode_mask =		BM(10, 9),
+	},
+	.bank1_mask = {
+			.md_reg =		GFX2D0_MD1_REG,
+			.ns_mask =		BM(19, 16) | BM(2, 0),
+			.rst_mask =		BIT(24),
+			.mnd_en_mask =		BIT(5),
+			.mode_mask =		BM(7, 6),
+	},
+};
+
+static struct rcg_clk gfx2d0_clk = {
+	.b = {
+		.ctl_reg = GFX2D0_CC_REG,
+		.en_mask = BIT(0),
+		.reset_reg = SW_RESET_CORE_REG,
+		.reset_mask = BIT(14),
+		.halt_reg = DBG_BUS_VEC_A_REG,
+		.halt_bit = 9,
+		.retain_reg = GFX2D0_CC_REG,
+		.retain_mask = BIT(31),
+	},
+	.ns_reg = GFX2D0_NS_REG,
+	.root_en_mask = BIT(2),
+	.set_rate = set_rate_mnd_banked,
+	.freq_tbl = clk_tbl_gfx2d,
+	.bank_info = &bmnd_info_gfx2d0,
+	.current_freq = &rcg_dummy_freq,
+	.c = {
+		.dbg_name = "gfx2d0_clk",
+		.ops = &clk_ops_rcg_8960,
+		VDD_DIG_FMAX_MAP3(LOW,  100000000, NOMINAL, 200000000,
+				  HIGH, 228571000),
+		CLK_INIT(gfx2d0_clk.c),
+	},
+};
+
+static struct bank_masks bmnd_info_gfx2d1 = {
+	.bank_sel_mask =		BIT(11),
+	.bank0_mask = {
+			.md_reg =		GFX2D1_MD0_REG,
+			.ns_mask =		BM(23, 20) | BM(5, 3),
+			.rst_mask =		BIT(25),
+			.mnd_en_mask =		BIT(8),
+			.mode_mask =		BM(10, 9),
+	},
+	.bank1_mask = {
+			.md_reg =		GFX2D1_MD1_REG,
+			.ns_mask =		BM(19, 16) | BM(2, 0),
+			.rst_mask =		BIT(24),
+			.mnd_en_mask =		BIT(5),
+			.mode_mask =		BM(7, 6),
+	},
+};
+
+static struct rcg_clk gfx2d1_clk = {
+	.b = {
+		.ctl_reg = GFX2D1_CC_REG,
+		.en_mask = BIT(0),
+		.reset_reg = SW_RESET_CORE_REG,
+		.reset_mask = BIT(13),
+		.halt_reg = DBG_BUS_VEC_A_REG,
+		.halt_bit = 14,
+		.retain_reg = GFX2D1_CC_REG,
+		.retain_mask = BIT(31),
+	},
+	.ns_reg = GFX2D1_NS_REG,
+	.root_en_mask = BIT(2),
+	.set_rate = set_rate_mnd_banked,
+	.freq_tbl = clk_tbl_gfx2d,
+	.bank_info = &bmnd_info_gfx2d1,
+	.current_freq = &rcg_dummy_freq,
+	.c = {
+		.dbg_name = "gfx2d1_clk",
+		.ops = &clk_ops_rcg_8960,
+		VDD_DIG_FMAX_MAP3(LOW,  100000000, NOMINAL, 200000000,
+				  HIGH, 228571000),
+		CLK_INIT(gfx2d1_clk.c),
+	},
+};
+
+#define F_GFX3D(f, s, m, n) \
+	{ \
+		.freq_hz = f, \
+		.src_clk = &s##_clk.c, \
+		.md_val = MD4(4, m, 0, n), \
+		.ns_val = NS_MND_BANKED4(18, 14, n, m, 3, 0, s##_to_mm_mux), \
+		.ctl_val = CC_BANKED(9, 6, n), \
+		.mnd_en_mask = (BIT(8) | BIT(5)) * !!(n), \
+	}
+
+static struct clk_freq_tbl clk_tbl_gfx3d_8960[] = {
+	F_GFX3D(        0, gnd,  0,  0),
+	F_GFX3D( 27000000, pxo,  0,  0),
+	F_GFX3D( 48000000, pll8, 1,  8),
+	F_GFX3D( 54857000, pll8, 1,  7),
+	F_GFX3D( 64000000, pll8, 1,  6),
+	F_GFX3D( 76800000, pll8, 1,  5),
+	F_GFX3D( 96000000, pll8, 1,  4),
+	F_GFX3D(128000000, pll8, 1,  3),
+	F_GFX3D(145455000, pll2, 2, 11),
+	F_GFX3D(160000000, pll2, 1,  5),
+	F_GFX3D(177778000, pll2, 2,  9),
+	F_GFX3D(200000000, pll2, 1,  4),
+	F_GFX3D(228571000, pll2, 2,  7),
+	F_GFX3D(266667000, pll2, 1,  3),
+	F_GFX3D(320000000, pll2, 2,  5),
+	F_END
+};
+
+static struct clk_freq_tbl clk_tbl_gfx3d_8960_v2[] = {
+	F_GFX3D(        0, gnd,  0,  0),
+	F_GFX3D( 27000000, pxo,  0,  0),
+	F_GFX3D( 48000000, pll8, 1,  8),
+	F_GFX3D( 54857000, pll8, 1,  7),
+	F_GFX3D( 64000000, pll8, 1,  6),
+	F_GFX3D( 76800000, pll8, 1,  5),
+	F_GFX3D( 96000000, pll8, 1,  4),
+	F_GFX3D(128000000, pll8, 1,  3),
+	F_GFX3D(145455000, pll2, 2, 11),
+	F_GFX3D(160000000, pll2, 1,  5),
+	F_GFX3D(177778000, pll2, 2,  9),
+	F_GFX3D(200000000, pll2, 1,  4),
+	F_GFX3D(228571000, pll2, 2,  7),
+	F_GFX3D(266667000, pll2, 1,  3),
+	F_GFX3D(300000000, pll3, 1,  4),
+	F_GFX3D(320000000, pll2, 2,  5),
+	F_GFX3D(400000000, pll2, 1,  2),
+	F_END
+};
+
+static unsigned long fmax_gfx3d_8960_v2[MAX_VDD_LEVELS] __initdata = {
+	[VDD_DIG_LOW]     = 128000000,
+	[VDD_DIG_NOMINAL] = 300000000,
+	[VDD_DIG_HIGH]    = 400000000
+};
+
+static struct clk_freq_tbl clk_tbl_gfx3d_8064[] = {
+	F_GFX3D(        0, gnd,   0,  0),
+	F_GFX3D( 27000000, pxo,   0,  0),
+	F_GFX3D( 48000000, pll8,  1,  8),
+	F_GFX3D( 54857000, pll8,  1,  7),
+	F_GFX3D( 64000000, pll8,  1,  6),
+	F_GFX3D( 76800000, pll8,  1,  5),
+	F_GFX3D( 96000000, pll8,  1,  4),
+	F_GFX3D(128000000, pll8,  1,  3),
+	F_GFX3D(145455000, pll2,  2, 11),
+	F_GFX3D(160000000, pll2,  1,  5),
+	F_GFX3D(177778000, pll2,  2,  9),
+	F_GFX3D(200000000, pll2,  1,  4),
+	F_GFX3D(228571000, pll2,  2,  7),
+	F_GFX3D(266667000, pll2,  1,  3),
+	F_GFX3D(325000000, pll15, 1,  3),
+	F_GFX3D(400000000, pll2,  1,  2),
+	F_END
+};
+
+static unsigned long fmax_gfx3d_8064[MAX_VDD_LEVELS] __initdata = {
+	[VDD_DIG_LOW]     = 128000000,
+	[VDD_DIG_NOMINAL] = 325000000,
+	[VDD_DIG_HIGH]    = 400000000
+};
+
+static struct bank_masks bmnd_info_gfx3d = {
+	.bank_sel_mask =		BIT(11),
+	.bank0_mask = {
+			.md_reg =		GFX3D_MD0_REG,
+			.ns_mask =		BM(21, 18) | BM(5, 3),
+			.rst_mask =		BIT(23),
+			.mnd_en_mask =		BIT(8),
+			.mode_mask =		BM(10, 9),
+	},
+	.bank1_mask = {
+			.md_reg =		GFX3D_MD1_REG,
+			.ns_mask =		BM(17, 14) | BM(2, 0),
+			.rst_mask =		BIT(22),
+			.mnd_en_mask =		BIT(5),
+			.mode_mask =		BM(7, 6),
+	},
+};
+
+static struct rcg_clk gfx3d_clk = {
+	.b = {
+		.ctl_reg = GFX3D_CC_REG,
+		.en_mask = BIT(0),
+		.reset_reg = SW_RESET_CORE_REG,
+		.reset_mask = BIT(12),
+		.halt_reg = DBG_BUS_VEC_A_REG,
+		.halt_bit = 4,
+		.retain_reg = GFX3D_CC_REG,
+		.retain_mask = BIT(31),
+	},
+	.ns_reg = GFX3D_NS_REG,
+	.root_en_mask = BIT(2),
+	.set_rate = set_rate_mnd_banked,
+	.freq_tbl = clk_tbl_gfx3d_8960,
+	.bank_info = &bmnd_info_gfx3d,
+	.current_freq = &rcg_dummy_freq,
+	.c = {
+		.dbg_name = "gfx3d_clk",
+		.ops = &clk_ops_rcg_8960,
+		VDD_DIG_FMAX_MAP3(LOW,  128000000, NOMINAL, 266667000,
+				  HIGH, 320000000),
+		CLK_INIT(gfx3d_clk.c),
+		.depends = &gmem_axi_clk.c,
+	},
+};
+#endif
+#ifdef CONFIG_MSM_GPU_MAX_OC
 static struct clk_freq_tbl clk_tbl_gfx2d[] = {
 	F_GFX2D(        0, gnd,  0,  0),
 	F_GFX2D( 27000000, pxo,  0,  0),
@@ -3474,6 +3708,7 @@ static struct rcg_clk gfx3d_clk = {
 		.depends = &gmem_axi_clk.c,
 	},
 };
+#endif
 
 #define F_VCAP(f, s, m, n) \
 	{ \
