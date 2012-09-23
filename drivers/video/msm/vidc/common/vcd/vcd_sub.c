@@ -3333,3 +3333,27 @@ void vcd_handle_ind_info_output_reconfig(
 		 0, cctxt, cctxt->client_data);
 	}
 }
+<<<<<<< HEAD
+=======
+
+u32 vcd_set_num_slices(struct vcd_clnt_ctxt *cctxt)
+{
+	struct vcd_property_hdr prop_hdr;
+	struct vcd_property_slice_delivery_info slice_delivery_info;
+	u32 rc = VCD_S_SUCCESS;
+	prop_hdr.prop_id = VCD_I_SLICE_DELIVERY_MODE;
+	prop_hdr.sz =
+		sizeof(struct vcd_property_slice_delivery_info);
+	rc = ddl_get_property(cctxt->ddl_handle, &prop_hdr,
+				&slice_delivery_info);
+	VCD_FAILED_RETURN(rc, "Failed: Get VCD_I_SLICE_DELIVERY_MODE");
+	if (slice_delivery_info.enable) {
+		cctxt->num_slices = slice_delivery_info.num_slices;
+		VCD_MSG_LOW("%s slice delivery mode num_slices = %u\n",
+					__func__, cctxt->num_slices);
+	} else {
+		cctxt->num_slices = 1;
+	}
+	return rc;
+}
+>>>>>>> 8b6e8db... linaro compilable
