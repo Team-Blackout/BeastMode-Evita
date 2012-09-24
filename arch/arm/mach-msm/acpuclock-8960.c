@@ -126,16 +126,16 @@ static void set_acpuclk_cpu_freq_foot_print(unsigned cpu, unsigned khz)
 static void set_acpuclk_L2_freq_foot_print(unsigned khz)
 {
 #ifdef CONFIG_MSM_CPU_MAX_CLK_1DOT89GHZ
-	unsigned *status = (unsigned *)(CPU_FOOT_PRINT_BASE_CPU0_VIRT + 0x32);
+	unsigned *status = (unsigned *)(CPU_FOOT_PRINT_BASE_CPU0_VIRT + 0x40);
 #endif
 #ifdef CONFIG_MSM_CPU_MAX_CLK_1DOT7GHZ
 	unsigned *status = (unsigned *)(CPU_FOOT_PRINT_BASE_CPU0_VIRT + 0x3c);
 #endif
 #ifdef CONFIG_MSM_CPU_MAX_CLK_2DOT1GHZ
-	unsigned *status = (unsigned *)(CPU_FOOT_PRINT_BASE_CPU0_VIRT + 0x32);
+	unsigned *status = (unsigned *)(CPU_FOOT_PRINT_BASE_CPU0_VIRT + 0x40);
 #endif
 #ifdef CONFIG_MSM_CPU_MAX_CLK_1DOT5GHZ
-	unsigned *status = (unsigned *)(CPU_FOOT_PRINT_BASE_CPU0_VIRT + 0x38);
+	unsigned *status = (unsigned *)(CPU_FOOT_PRINT_BASE_CPU0_VIRT + 0x30);
 #endif
 	*status = khz;
 	mb();
@@ -171,8 +171,8 @@ static void set_acpuclk_L2_freq_foot_print(unsigned khz)
 
 #define STBY_KHZ		1
 
-#define MAX_VDD_SC    1350000 /* uV */  
-#define MIN_VDD_SC     800000 /* uV */
+#define MAX_VDD_SC    1350000 /* uV */	
+#define MIN_VDD_SC     400000 /* uV */
 #define HFPLL_NOMINAL_VDD	1050000
 #define HFPLL_LOW_VDD		 800000
 #define HFPLL_LOW_VDD_PLL_L_MAX	0x28
@@ -181,6 +181,10 @@ static void set_acpuclk_L2_freq_foot_print(unsigned khz)
 
 /* PTE EFUSE register. */
 #define QFPROM_PTE_EFUSE_ADDR	(MSM_QFPROM_BASE + 0x00C0)
+
+
+
+/* HTC: Custom max frequency. */
 
 enum scalables {
 	CPU0 = 0,
@@ -1302,21 +1306,22 @@ ssize_t acpuclk_get_vdd_levels_str(char *buf, int isApp) {
 	if (buf) {
 		mutex_lock(&driver_lock);
 
-	if (isApp == 0)
-	{
-		for (i = 0; acpu_freq_tbl[i+1].speed.khz; i++)
-			len += sprintf(buf + len, "%8u: %8d\n", acpu_freq_tbl[i+1].speed.khz, acpu_freq_tbl[i+1].vdd_core );
-	}
-	else
-	{
-		for (i = isApp-1; i >= 0; i--)
-			len += sprintf(buf + len, "%dmhz: %d mV\n", acpu_freq_tbl[i+1].speed.khz/1000,acpu_freq_tbl[i+1].vdd_core/1000);
-	}
-	mutex_unlock(&driver_lock);
+		if (isApp == 0)
+		{
+			for (i = 0; acpu_freq_tbl[i+1].speed.khz; i++)
+				len += sprintf(buf + len, "%8u: %8d\n", acpu_freq_tbl[i+1].speed.khz, acpu_freq_tbl[i+1].vdd_core );
+		}
+		else
+		{
+			for (i = isApp-1; i >= 0; i--)
+				len += sprintf(buf + len, "%dmhz: %d mV\n", acpu_freq_tbl[i+1].speed.khz/1000,acpu_freq_tbl[i+1].vdd_core/1000);
+		}
+		mutex_unlock(&driver_lock);
 
-	}
+		}
 	return len;
 }
+
 
 void acpuclk_set_vdd(unsigned int khz, int vdd_uv) {
 
@@ -1328,12 +1333,12 @@ void acpuclk_set_vdd(unsigned int khz, int vdd_uv) {
 	for (i = 0; acpu_freq_tbl[i+1].speed.khz; i++) {
 		if (khz == 0)
 			new_vdd_uv = min(max((acpu_freq_tbl[i+1].vdd_core + vdd_uv), (unsigned int)MIN_VDD_SC), (unsigned int)MAX_VDD_SC);
-	else if ( acpu_freq_tbl[i+1].speed.khz == khz)
-		new_vdd_uv = min(max((unsigned int)vdd_uv, (unsigned int)MIN_VDD_SC), (unsigned int)MAX_VDD_SC);
-	else
-		continue;
+		else if ( acpu_freq_tbl[i+1].speed.khz == khz)
+			new_vdd_uv = min(max((unsigned int)vdd_uv, (unsigned int)MIN_VDD_SC), (unsigned int)MAX_VDD_SC);
+		else
+			continue;
 
-	acpu_freq_tbl[i+1].vdd_core = new_vdd_uv;
+		acpu_freq_tbl[i+1].vdd_core = new_vdd_uv;
 	}
 
 	mutex_unlock(&driver_lock);
@@ -1349,7 +1354,7 @@ void acpuclk_UV_mV_table(int cnt, int vdd_uv[]) {
 	{
 		for (i = 0; i < cnt; i++) {
 			if ((vdd_uv[i]*1000) >= MIN_VDD_SC && (vdd_uv[i]*1000) <= MAX_VDD_SC)
-		acpu_freq_tbl[i+1].vdd_core = vdd_uv[i]*1000;
+			acpu_freq_tbl[i+1].vdd_core = vdd_uv[i]*1000;
 		}
 	}
 	else
@@ -1357,8 +1362,8 @@ void acpuclk_UV_mV_table(int cnt, int vdd_uv[]) {
 		j = cnt-1;
 		for (i = 0; i < cnt; i++) {
 			if ((vdd_uv[j]*1000) >= MIN_VDD_SC && (vdd_uv[j]*1000) <= MAX_VDD_SC)
-		acpu_freq_tbl[i+1].vdd_core = vdd_uv[j]*1000;
-		j--;
+			acpu_freq_tbl[i+1].vdd_core = vdd_uv[j]*1000;
+			j--;
 		}
 	}
 	mutex_unlock(&driver_lock);
@@ -1558,49 +1563,7 @@ static int __cpuinit acpuclock_cpu_callback(struct notifier_block *nfb,
 static struct notifier_block __cpuinitdata acpuclock_cpu_notifier = {
 	.notifier_call = acpuclock_cpu_callback,
 };
-#ifdef CONFIG_CMDLINE_OPTIONS
-/* start cmdline_khz */
-uint32_t acpu_check_khz_value(unsigned long khz)
-{
-   struct clkctl_acpu_speed *f;
 
-        if (khz > 1944000)
-              return CONFIG_MSM_CPU_FREQ_MAX;
-
-        if (khz < 192)
-          return CONFIG_MSM_CPU_FREQ_MIN;
-
-        for (f = acpu_freq_tbl_oc; f->acpuclk_khz != 0; f++) {
-          if (khz < 192000) {
-                     if (f->acpuclk_khz == (khz*1000))
-                               return f->acpuclk_khz;
-                  if ((khz*1000) > f->acpuclk_khz) {
-                              f++;
-                            if ((khz*1000) < f->acpuclk_khz) {
-                                      f--;
-                                    return f->acpuclk_khz;
-                          }
-                               f--;
-                    }
-               }
-               if (f->acpuclk_khz == khz) {
-                    return 1;
-               }
-               if (khz > f->acpuclk_khz) {
-                     f++;
-                    if (khz < f->acpuclk_khz) {
-                             f--;
-                            return f->acpuclk_khz;
-                  }
-                       f--;
-            }
-       }
-
-        return 0;
-}
-EXPORT_SYMBOL(acpu_check_khz_value);
-/* end cmdline_khz */
-#endif
 static const int krait_needs_vmin(void)
 {
 	switch (read_cpuid_id()) {
@@ -1707,6 +1670,7 @@ static struct acpu_level * __init select_freq_plan(void)
 		pr_info("Applying min 1.15v fix for Krait Errata 26\n");
 		kraitv2_apply_vmin(acpu_freq_tbl);
 	}
+
 
 	/* Find the max supported scaling frequency. */
 	for (l = acpu_freq_tbl; l->speed.khz != 0; l++)
