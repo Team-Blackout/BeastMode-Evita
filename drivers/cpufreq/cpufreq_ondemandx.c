@@ -132,12 +132,12 @@ static void ondemandx_suspend(int suspend)
                 suspended = 0;
                 __cpufreq_driver_target(dbs_info->cur_policy, dbs_info->cur_policy->max,
 CPUFREQ_RELATION_L);
-                pr_info("[imoseyon] ondemandx awake at %d\n", dbs_info->cur_policy->cur);
+                pr_info("[zarboz] ondemandx awake at %d\n", dbs_info->cur_policy->cur);
         } else {
                 suspended = 1;
 // let's give it a little breathing room
                 __cpufreq_driver_target(dbs_info->cur_policy, dbs_tuners_ins.suspend_freq, CPUFREQ_RELATION_H);
-                pr_info("[imoseyon] ondemandx suspended at %d\n", dbs_info->cur_policy->cur);
+                pr_info("[zarboz] ondemandx suspended at %d\n", dbs_info->cur_policy->cur);
         }
 }
 
