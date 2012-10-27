@@ -2319,6 +2319,16 @@ config MSM_CPU_MAX_CLK_1DOT5GHZ
 	help
 	  To support the Max 1.5Ghz.
 
+config CMDLINE_OPTIONS
+	bool "Enable cmdline khz/gov/maxscroff command parsing"
+	default y
+	help
+	  This enables the parsing of maxkhz=<VALUEinKHZ>,
+	  minkhz=<VALUEinKHZ>, governor=<GOVERNOR.NAME> and
+	  maxscroff=<VALUEinKHZ> commands from the kernels cmdline.
+	  This also enables a freq. cap while the screen is off
+	  and gives support for sweep2wake features.
+
 config ACPU_CUSTOM_FREQ_SUPPORT
 	bool "Custom frequency support"
 	default n
