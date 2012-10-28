@@ -23,6 +23,9 @@
 #include <linux/mfd/pm8xxx/core.h>
 #include <linux/leds-pm8xxx.h>
 #include <linux/wakelock.h>
+#ifdef CONFIG_TOUCHSCREEN_ATMEL_SWEEP2WAKE
+#include <linux/atmel_qt602240.h>
+#endif
 
 
 #define SSBI_REG_ADDR_DRV_KEYPAD	0x48
@@ -154,7 +157,7 @@ void pm8xxx_led_current_set_for_key(int brightness_key)
 
 	}
 }
-static void pm8xxx_led_current_set(struct led_classdev *led_cdev, enum led_brightness brightness)
+extern void pm8xxx_led_current_set(struct led_classdev *led_cdev, enum led_brightness brightness)
 {
 	struct pm8xxx_led_data *led = container_of(led_cdev,  struct pm8xxx_led_data, cdev);
 	int rc, offset;
@@ -495,7 +498,7 @@ static DEVICE_ATTR(pwm_coefficient, 0644, pm8xxx_led_pwm_coefficient_show, pm8xx
 
 static int __devinit pm8xxx_led_probe(struct platform_device *pdev)
 {
-	const struct pm8xxx_led_platform_data *pdata = pdev->dev.platform_data;
+	struct pm8xxx_led_platform_data *pdata = pdev->dev.platform_data;
 	struct pm8xxx_led_configure *curr_led;
 	struct pm8xxx_led_data *led, *led_dat;
 	int i, j, ret = -ENOMEM;
@@ -617,9 +620,16 @@ static int __devinit pm8xxx_led_probe(struct platform_device *pdev)
 		}
 	}
 
+#ifdef CONFIG_TOUCHSCREEN_ATMEL_SWEEP2WAKE
+	if (!strcmp(led_data->[0]name, "button-backlight")) {
+		sweep2wake_setleddev(&led[i].cdev);
+		printk(KERN_INFO "[sweep2wake]: set led device %s, bank %d\n", led_data->[0]name, led_data->[0]flags);
+	}
+#endif
 	pm8xxx_leds = led;
 
 	platform_set_drvdata(pdev, led);
+
 
 	return 0;
 
