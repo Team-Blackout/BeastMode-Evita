@@ -1464,6 +1464,7 @@ config MSM_DALRPC_TEST
 	default m
 	help
 	  Exercises DAL RPC calls to QDSP6.
+<<<<<<< HEAD
 	  
 config MSM_MPDEC
         bool "Enable kernel based mpdecision"
@@ -1472,6 +1473,8 @@ config MSM_MPDEC
        help
       This enables kernel based multi core control.
 	(up/down hotplug based on load)
+=======
+>>>>>>> 21ca614... adjusting governors made
 
 if CPU_FREQ_MSM
 
@@ -2282,6 +2285,7 @@ config MSM_CACHE_DUMP
 	  Add infrastructure to dump the L1 and L2 caches to an allocated buffer.
 	  This allows for analysis of the caches in case cache corruption is
 	  suspected.
+<<<<<<< HEAD
 
 config MSM_GPU_MAX_OC
 	bool "GPU Max Overclock support"
@@ -2295,6 +2299,9 @@ config MSM_GPU_MAX_STOCK
 	help
 	  To support the stock GPU OC.
 
+=======
+	  
+>>>>>>> 21ca614... adjusting governors made
 config MSM_CPU_MAX_CLK_2DOT1GHZ
 	bool "CPU Max 2.1Ghz clk support"
 	default n
@@ -2351,6 +2358,16 @@ config MSM_MPDEC
       This enables kernel based multi core control.
 	(up/down hotplug based on load)
 
+config CMDLINE_OPTIONS
+	bool "Enable cmdline khz/gov/maxscroff command parsing"
+	default y
+	help
+	  This enables the parsing of maxkhz=<VALUEinKHZ>,
+	  minkhz=<VALUEinKHZ>, governor=<GOVERNOR.NAME> and
+	  maxscroff=<VALUEinKHZ> commands from the kernels cmdline.
+	  This also enables a freq. cap while the screen is off
+	  and gives support for sweep2wake features.
+            
 config AUDIO_USAGE_FOR_POWER_CONSUMPTION
 	bool "AUDIO_USAGE_FOR_POWER_CONSUMPTION"
 	default n
