@@ -1780,23 +1780,14 @@ static void synaptics_ts_finger_func(struct synaptics_ts_data *ts)
 								   ((finger_data[i][0] < prevx) &&
 								    (finger_data[i][0] > nextx) &&
 								    (finger_data[i][1] > 1780))) {
-<<<<<<< HEAD
-									prevx = 880;
-									nextx = 660;
-=======
 									prevx = nextx;
 									nextx = 500;
->>>>>>> 1de97f2... sweep2wake: add initial sweep2wake support
 									barrier[0] = true;
 									if ((barrier[1] == true) ||
 									   ((finger_data[i][0] < prevx) &&
 									    (finger_data[i][0] > nextx) &&
 									    (finger_data[i][1] > 1780))) {
-<<<<<<< HEAD
-										prevx = 660;
-=======
 										prevx = nextx;
->>>>>>> 1de97f2... sweep2wake: add initial sweep2wake support
 										barrier[1] = true;
 										if ((finger_data[i][0] < prevx) &&
 										    (finger_data[i][1] > 1780)) {
