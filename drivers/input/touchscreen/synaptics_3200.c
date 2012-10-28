@@ -1738,9 +1738,9 @@ static void synaptics_ts_finger_func(struct synaptics_ts_data *ts)
 						}
 #ifdef CONFIG_TOUCHSCREEN_SYNAPTICS_SWEEP2WAKE
 
-				      printk(KERN_INFO "[sweep2wake]: %d=> X:%d, Y:%d w:%d, z:%d\n",
-								i + 1, finger_data[i][0], finger_data[i][1],
-								finger_data[i][2], finger_data[i][3]);
+// 				      printk(KERN_INFO "[sweep2wake]: %d=> X:%d, Y:%d w:%d, z:%d\n",
+// 								i + 1, finger_data[i][0], finger_data[i][1],
+// 								finger_data[i][2], finger_data[i][3]);
 							//left->right
 							if ((ts->finger_count == 1) && (scr_suspended == true) && (s2w_switch > 0)) {
 								prevx = 30;
@@ -1780,14 +1780,14 @@ static void synaptics_ts_finger_func(struct synaptics_ts_data *ts)
 								   ((finger_data[i][0] < prevx) &&
 								    (finger_data[i][0] > nextx) &&
 								    (finger_data[i][1] > 1780))) {
-									prevx = nextx;
-									nextx = 500;
+									prevx = 880;
+									nextx = 660;
 									barrier[0] = true;
 									if ((barrier[1] == true) ||
 									   ((finger_data[i][0] < prevx) &&
 									    (finger_data[i][0] > nextx) &&
 									    (finger_data[i][1] > 1780))) {
-										prevx = nextx;
+										prevx = 660;
 										barrier[1] = true;
 										if ((finger_data[i][0] < prevx) &&
 										    (finger_data[i][1] > 1780)) {
