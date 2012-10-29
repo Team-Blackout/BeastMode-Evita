@@ -2274,8 +2274,7 @@ config MSM_CACHE_DUMP
 	  Add infrastructure to dump the L1 and L2 caches to an allocated buffer.
 	  This allows for analysis of the caches in case cache corruption is
 	  suspected.
-<<<<<<< HEAD
-
+	  
 config MSM_GPU_MAX_OC
 	bool "GPU Max Overclock support"
 	default n
@@ -2288,9 +2287,6 @@ config MSM_GPU_MAX_STOCK
 	help
 	  To support the stock GPU OC.
 
-=======
-	  
->>>>>>> 21ca614... adjusting governors made
 config MSM_CPU_MAX_CLK_2DOT1GHZ
 	bool "CPU Max 2.1Ghz clk support"
 	default n
