@@ -27,6 +27,10 @@ obj-$(CONFIG_CPU_FREQ_GOV_SMOOTHASS)	+= cpufreq_smoothass.o
 obj-$(CONFIG_CPU_FREQ_GOV_ASSWAX)	+= cpufreq_asswax.o
 obj-$(CONFIG_CPU_FREQ_GOV_HOTPLUG)	+= cpufreq_hotplug.o
 obj-$(CONFIG_CPU_FREQ_GOV_BADASS)	+= cpufreq_badass.o
+<<<<<<< HEAD
+=======
+obj-$(CONFIG_CPU_FREQ_GOV_HOTPLUG)	+= cpufreq_hotplug.o
+>>>>>>> 57f0202... 	modified:   Makefile
 obj-$(CONFIG_CPU_FREQ_GOV_PEGASUSQ)	+= cpufreq_pegasusq.o
 
 # CPUfreq cross-arch helpers

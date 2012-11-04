@@ -55,6 +55,7 @@ config CPU_FREQ_DEFAULT_GOV_PERFORMANCE
 	select CPU_FREQ_GOV_PERFORMANCE
 	help
 	  Use the CPUFreq governor 'performance' as default. This sets
+<<<<<<< HEAD
 	  the frequency statically to the highest frequency supported by
 	  the CPU.
 
@@ -62,6 +63,14 @@ config CPU_FREQ_DEFAULT_GOV_PEGASUSQ
 	bool "pegasusq"
 	select CPU_FREQ_GOV_PEGASUSQ
 
+=======
+	  the frequency statically to the highest frequency supported by the CPU.
+	 
+config CPU_FREQ_DEFAULT_GOV_PEGASUSQ
+	bool "pegasusq"
+	select CPU_FREQ_GOV_PEGASUSQ
+	
+>>>>>>> 57f0202... 	modified:   Makefile
 config CPU_FREQ_DEFAULT_GOV_POWERSAVE
 	bool "powersave"
 	depends on EXPERT

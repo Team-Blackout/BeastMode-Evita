@@ -2989,8 +2989,13 @@ static struct kgsl_device_platform_data kgsl_2d1_pdata = {
 		},
 	},
 	.init_level = 0,
+<<<<<<< HEAD
 	.num_levels = 2,
 	.max_level=1,
+=======
+	.max_level=1,
+	.num_levels = 3,
+>>>>>>> 57f0202... 	modified:   Makefile
 	.set_grp_async = NULL,
 	.idle_timeout = HZ/10,
 	.nap_allowed = true,
