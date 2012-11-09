@@ -22,6 +22,7 @@
 #include <linux/clk.h>
 #include <mach/hardware.h>
 #include <mach/iommu_domains.h>
+#include <mach/iommu.h>
 #include <linux/io.h>
 #include <linux/debugfs.h>
 #include <linux/fb.h>
@@ -98,7 +99,7 @@ struct mdp4_overlay_ctrl {
 static struct mdp4_overlay_ctrl *ctrl = &mdp4_overlay_db;
 static int new_perf_level;
 static struct ion_client *display_iclient;
-static struct mdp4_iommu_pipe_info mdp_iommu[MDP4_MIXER_MAX][OVERLAY_PIPE_RGB3];
+static struct mdp4_iommu_pipe_info mdp_iommu[MDP4_MIXER_MAX][OVERLAY_PIPE_MAX];
 
 int mdp4_overlay_iommu_map_buf(int mem_id,
 	struct mdp4_overlay_pipe *pipe, unsigned int plane,
@@ -159,7 +160,7 @@ void mdp4_iommu_unmap(struct mdp4_overlay_pipe *pipe)
 	if (!display_iclient)
 		return;
 
-	for (j = 0; j < OVERLAY_PIPE_RGB3; j++) {
+	for (j = 0; j < OVERLAY_PIPE_MAX; j++) {
 		iom_pipe_info = &mdp_iommu[pipe->mixer_num][j];
 		for (i = 0; i < MDP4_MAX_PLANE; i++) {
 			if (iom_pipe_info->prev_ihdl[i]) {
@@ -2979,6 +2980,7 @@ int mdp4_overlay_play(struct fb_info *info, struct msmfb_overlay_data *req)
 			}
 #ifdef CONFIG_FB_MSM_MIPI_DSI
 			if (ctrl->panel_mode & MDP4_PANEL_DSI_CMD) {
+				mdp4_iommu_attach();
 				mdp4_dsi_cmd_dma_busy_wait(mfd);
 				mdp4_dsi_cmd_kickoff_video(mfd, pipe);
 			}
@@ -3042,4 +3044,63 @@ end:
 		put_pmem_file(srcp2_file);
 #endif
 	return ret;
+}
+
+static struct {
+	char *name;
+	int  domain;
+} msm_iommu_ctx_names[] = {
+	/* Display */
+	{
+		.name = "mdp_vg1",
+		.domain = DISPLAY_DOMAIN,
+	},
+	/* Display */
+	{
+		.name = "mdp_vg2",
+		.domain = DISPLAY_DOMAIN,
+	},
+	/* Display */
+	{
+		.name = "mdp_rgb1",
+		.domain = DISPLAY_DOMAIN,
+	},
+	/* Display */
+	{
+		.name = "mdp_rgb2",
+		.domain = DISPLAY_DOMAIN,
+	},
+};
+
+void mdp4_iommu_attach(void)
+{
+	static int done;
+	struct iommu_domain *domain;
+	int i;
+
+	if (!done) {
+		for (i = 0; i < ARRAY_SIZE(msm_iommu_ctx_names); i++) {
+			int domain_idx;
+			struct device *ctx = msm_iommu_get_ctx(
+				msm_iommu_ctx_names[i].name);
+
+			if (!ctx)
+				continue;
+
+			domain_idx = msm_iommu_ctx_names[i].domain;
+
+			domain = msm_get_iommu_domain(domain_idx);
+			if (!domain)
+				continue;
+
+			if (iommu_attach_device(domain,	ctx)) {
+				WARN(1, "%s: could not attach domain %d to context %s."
+					" iommu programming will not occur.\n",
+					__func__, domain_idx,
+					msm_iommu_ctx_names[i].name);
+				continue;
+			}
+		}
+		done = 1;
+	}
 }
