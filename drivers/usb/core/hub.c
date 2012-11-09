@@ -846,6 +846,12 @@ static void hub_activate(struct usb_hub *hub, enum hub_activation_type type)
 					USB_PORT_FEAT_C_PORT_LINK_STATE);
 		}
 
+		if ((portchange & USB_PORT_STAT_C_BH_RESET) &&
+				hub_is_superspeed(hub->hdev)) {
+			need_debounce_delay = true;
+			clear_port_feature(hub->hdev, port1,
+					USB_PORT_FEAT_C_BH_PORT_RESET);
+		}
 		/* We can forget about a "removed" device when there's a
 		 * physical disconnect or the connect status changes.
 		 */
@@ -2234,7 +2240,7 @@ static int hub_port_reset(struct usb_hub *hub, int port1,
 static int hub_port_warm_reset(struct usb_hub *hub, int port)
 {
 	int ret;
-	u16 portstatus, portchange;
+	u16 portstatus = 0, portchange = 0;
 
 	if (!hub_is_superspeed(hub->hdev)) {
 		dev_err(hub->intfdev, "only USB3 hub support warm reset\n");
@@ -2588,7 +2594,7 @@ int usb_port_resume(struct usb_device *udev, pm_message_t msg)
 	struct usb_hub	*hub = hdev_to_hub(udev->parent);
 	int		port1 = udev->portnum;
 	int		status;
-	u16		portchange, portstatus;
+	u16		portchange = 0, portstatus = 0;
 
 	/* Skip the initial Clear-Suspend step for a remote wakeup */
 	status = hub_port_status(hub, port1, &portstatus, &portchange);
