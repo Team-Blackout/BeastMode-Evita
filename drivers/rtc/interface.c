@@ -789,6 +789,7 @@ static void rtc_alarm_disable(struct rtc_device *rtc)
 	___rtc_set_alarm(rtc, &alarm);
 }
 
+
 /**
  * rtc_timer_remove - Removes a rtc_timer from the rtc_device timerqueue
  * @rtc rtc device
