@@ -127,8 +127,9 @@ static int synaptics_init_panel(struct synaptics_ts_data *ts);
 
 static irqreturn_t synaptics_irq_thread(int irq, void *ptr);
 
-
+#ifdef CONFIG_TOUCHSCREEN_SYNAPTICS_SWEEP2WAKE
 int s2w_switch = 1;
+int s2s_switch = 1;
 int s2w_pwr_delay = 100;
 int s2w_key = KEY_POWER;
 int s2w_wakestat = 0;
@@ -138,6 +139,7 @@ bool barrier[2] = {false, false}, barrier1[2] = {false, false};
 static struct input_dev * sweep2wake_pwrdev;
 static DEFINE_MUTEX(pwrkeyworklock);
 
+#ifdef CONFIG_CMDLINE_OPTIONS
 
 static int __init cy8c_read_s2w_cmdline(char *s2w)
 {
@@ -146,7 +148,7 @@ static int __init cy8c_read_s2w_cmdline(char *s2w)
 		s2w_switch = 1;
 	} else if (strcmp(s2w, "2") == 0) {
 		printk(KERN_INFO "[cmdline_s2w]: Sweep2Wake and Sweep2Sleep enabled. | s2w='%s'", s2w);
-		s2w_switch = 2;
+		s2s_switch = 1;
 	} else if (strcmp(s2w, "3") == 0) {
 		printk(KERN_INFO "[cmdline_s2w]: Sweep2Wake all features enabled. | s2w='%s'", s2w);
 		s2w_switch = 3;
@@ -164,7 +166,7 @@ static int __init cy8c_read_s2w_cmdline(char *s2w)
 }
 __setup("s2w=", cy8c_read_s2w_cmdline);
 
-
+#endif
 extern void sweep2wake_setdev(struct input_dev * input_device) {
 	sweep2wake_pwrdev = input_device;
 	return;
@@ -190,7 +192,7 @@ void sweep2wake_pwrtrigger(void) {
         return;
 }
 
-
+#endif
 static void syn_page_select(struct i2c_client *client, uint8_t page)
 {
 	struct synaptics_ts_data *ts = i2c_get_clientdata(client);
@@ -946,6 +948,7 @@ static ssize_t syn_diag_show(struct device *dev,
 	return count;
 }
 
+
 static ssize_t syn_diag_store(struct device *dev,
 		struct device_attribute *attr, const char *buf, size_t count)
 {
@@ -1321,7 +1324,9 @@ static DEVICE_ATTR(reset, (S_IWUSR),
 
 #endif
 
+#ifdef CONFIG_TOUCHSCREEN_SYNAPTICS_SWEEP2WAKE
 
+//sleep2wake toggle show in sysfs
 static ssize_t synaptics_sweep2wake_show(struct device *dev,
 		struct device_attribute *attr, char *buf)
 {
@@ -1345,7 +1350,32 @@ static ssize_t synaptics_sweep2wake_dump(struct device *dev,
 static DEVICE_ATTR(sweep2wake, (S_IWUSR|S_IRUGO),
 	synaptics_sweep2wake_show, synaptics_sweep2wake_dump);
 
+//Show Sweep2sleep
 
+static ssize_t synaptics_sweep2sleep_show(struct device *dev,
+		struct device_attribute *attr, char *buf)
+{
+	size_t count = 0;
+
+	count += sprintf(buf, "%d\n", s2s_switch);
+
+	return count;
+}
+
+static ssize_t synaptics_sweep2sleep_dump(struct device *dev,
+		struct device_attribute *attr, const char *buf, size_t count)
+{
+	if (buf[0] >= '0' && buf[0] <= '4' && buf[1] == '\n')
+                if (s2w_switch != buf[0] - '0')
+		        s2w_switch = buf[0] - '0';
+
+	return count;
+}
+
+static DEVICE_ATTR(sweep2sleep, (S_IWUSR|S_IRUGO),
+	synaptics_sweep2sleep_show, synaptics_sweep2sleep_dump);
+
+#endif
 
 static struct kobject *android_touch_kobj;
 
@@ -1382,13 +1412,18 @@ static int synaptics_touch_sysfs_init(void)
 		if (sysfs_create_file(android_touch_kobj, &dev_attr_diag.attr))
 			return -ENOMEM;
 		
-
+#ifdef CONFIG_TOUCHSCREEN_SYNAPTICS_SWEEP2WAKE
 	ret = sysfs_create_file(android_touch_kobj, &dev_attr_sweep2wake.attr);
 	if (ret) {
 		printk(KERN_ERR "%s: sysfs_create_file failed\n", __func__);
 		return ret;
 	}
-
+	ret = sysfs_create_file(android_touch_kobj, &dev_attr_sweep2sleep.attr);
+	if (ret) {
+		printk(KERN_ERR "%s: sysfs_create_file failed\n", __func__);
+		return ret;
+	}
+#endif
 
 #ifdef SYN_WIRELESS_DEBUG
 	ret= gpio_request(ts->gpio_irq, "synaptics_attn");
@@ -1435,9 +1470,11 @@ static void synaptics_touch_sysfs_remove(void)
 	sysfs_remove_file(android_touch_kobj, &dev_attr_pdt.attr);
 	sysfs_remove_file(android_touch_kobj, &dev_attr_htc_event.attr);
 	sysfs_remove_file(android_touch_kobj, &dev_attr_reset.attr);
-
+#ifdef CONFIG_TOUCHSCREEN_SYNAPTICS_SWEEP2WAKE
 	sysfs_remove_file(android_touch_kobj, &dev_attr_sweep2wake.attr);
+	sysfs_remove_file(android_touch_kobj, &dev_attr_sweep2sleep.attr);
 
+#endif
 #ifdef SYN_WIRELESS_DEBUG
 	sysfs_remove_file(android_touch_kobj, &dev_attr_enabled.attr);
 #endif
